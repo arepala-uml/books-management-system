@@ -56,10 +56,8 @@ func main() {
 	// Register the routes for the Book Store API
 	routes.RegisterBookStoreRoutes(r)
 
-	// Set up the server hostname and port using values from configuration
 	hostname := viper.GetString("SERVER_HOST") + ":" + viper.GetString("SERVER_PORT")
 	log.Info("Server running on ", hostname)
 
-	// Start the server and listen on the configured hostname and port
 	log.Fatal(http.ListenAndServe(hostname, r))
 }
