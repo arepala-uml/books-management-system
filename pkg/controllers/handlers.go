@@ -7,6 +7,7 @@ import (
 
 	"github.com/arepala-uml/books-management-system/pkg/cache"
 	"github.com/arepala-uml/books-management-system/pkg/config"
+	"github.com/arepala-uml/books-management-system/pkg/kafka"
 	"github.com/arepala-uml/books-management-system/pkg/models"
 	"github.com/arepala-uml/books-management-system/pkg/utils"
 	"github.com/go-playground/validator/v10"
@@ -134,9 +135,19 @@ func CreateBook(c *gin.Context) {
 	}
 	log.Infof("Successfully added the book with id: %d details to postgres", book.ID)
 
+	// Publish the event to Kafka (book created)
+	event := fmt.Sprintf("Book created: %s by %s", book.Title, book.Author)
+	if err := kafka.PublishEvent("book_events", []byte(event)); err != nil {
+		log.Printf("Failed to publish event to Kafka: %v", err)
+	}
+	log.Infof("Successfully published an event to the kafka topic book_events about creating book with id:%d", book.ID)
+
 	//Save to cache
 	cache.StoreBookInCache(book)
-	c.JSON(http.StatusCreated, book)
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Book created successfully",
+		"book":    book,
+	})
 }
 
 // UpdateBook handles the PUT /books/{id} request
@@ -190,6 +201,13 @@ func UpdateBook(c *gin.Context) {
 	}
 	log.Infof("Successfully updated the book with id: %d in postgres", id)
 
+	// Publish the event to Kafka (book updated)
+	event := fmt.Sprintf("Book updated: %s by %s", book.Title, book.Author)
+	if err := kafka.PublishEvent("book_events", []byte(event)); err != nil {
+		log.Errorf("Failed to publish event to Kafka: %v", err)
+	}
+	log.Infof("Successfully published an event to the kafka topic book_events about updaing book with id :%d", id)
+
 	// Cache the updated book
 	cache.StoreBookInCache(book)
 
@@ -219,8 +237,15 @@ func DeleteBook(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting book"})
 		return
 	}
-
 	log.Infof("Successfully deleted the book with id: %d from postgres", id)
+
+	// Publish the event to Kafka (book deleted)
+	event := fmt.Sprintf("Book deleted with id: %s", id)
+	if err := kafka.PublishEvent("book_events", []byte(event)); err != nil {
+		log.Errorf("Failed to publish event to Kafka: %v", err)
+	}
+	log.Infof("Successfully published an event to the kafka topic book_events about deleting book with id :%d", id)
+
 	// Remove from cache
 	cache.DeleteBookFromCache(id)
 
