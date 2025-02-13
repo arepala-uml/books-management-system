@@ -1,0 +1,275 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Book Management Store",
+        "description": "API documentation for managing books in the store",
+        "contact": {}
+    },
+    "paths": {
+        "/books": {
+            "get": {
+                "description": "Fetches all books, with pagination support using limit and offset query parameters",
+                "summary": "Get all books with optional pagination",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Limit the number of books per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of books",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.BookListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid query parameters",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error fetching books",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Adds a new book to the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Create a new book",
+                "parameters": [
+                    {
+                        "description": "Book details",
+                        "name": "book",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Book"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Book created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error creating book",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/books/{id}": {
+            "get": {
+                "description": "Fetches the book data for a specific ID, first checking the cache, then the database",
+                "summary": "Get details of a single book by ID",
+                "parameters": [
+                  {
+                    "type": "integer",
+                    "description": "Book ID",
+                    "name": "id",
+                    "in": "path",
+                    "required": true
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Book details",
+                    "schema": {
+                      "$ref": "#/definitions/models.Book"
+                    }
+                  },
+                  "404": {
+                    "description": "Book not found",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  },
+                  "500": {
+                    "description": "Error fetching book",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  }
+                }
+              },
+              "put": {
+                "description": "Updates the details of an existing book by ID",
+                "summary": "Update an existing book",
+                "parameters": [
+                  {
+                    "type": "integer",
+                    "description": "Book ID",
+                    "name": "id",
+                    "in": "path",
+                    "required": true
+                  },
+                  {
+                    "description": "Updated book details",
+                    "name": "book",
+                    "in": "body",
+                    "required": true,
+                    "schema": {
+                      "$ref": "#/definitions/models.Book"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Book updated successfully",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.SuccessResponse"
+                    }
+                  },
+                  "400": {
+                    "description": "Invalid input",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  },
+                  "404": {
+                    "description": "Book not found",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  },
+                  "500": {
+                    "description": "Error updating book",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "description": "Deletes a specific book from the system by its ID",
+                "summary": "Delete a book by ID",
+                "parameters": [
+                  {
+                    "type": "integer",
+                    "description": "Book ID",
+                    "name": "id",
+                    "in": "path",
+                    "required": true
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Book deleted successfully",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.SuccessResponse"
+                    }
+                  },
+                  "404": {
+                    "description": "Book not found",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  },
+                  "500": {
+                    "description": "Error deleting book",
+                    "schema": {
+                      "$ref": "#/definitions/controllers.ErrorResponse"
+                    }
+                  }
+                }
+              }
+        }
+    },
+    "definitions": {
+        "controllers.BookListResponse": {
+            "type": "object",
+            "properties": {
+                "books": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Book"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controllers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "details": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "book": {
+                    "$ref": "#/definitions/models.Book"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Book": {
+            "type": "object",
+            "required": [
+                "author",
+                "title",
+                "year"
+            ],
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

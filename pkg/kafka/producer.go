@@ -1,50 +1,49 @@
 package kafka
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/IBM/sarama"
+	"github.com/labstack/gommon/log"
+	"github.com/spf13/viper"
 )
 
-var producer sarama.SyncProducer
+// Every POST, PUT, DELETE request should publish an event to a Kafka topic
+func PublishEvent(topic string, message []byte) error {
+	brokersUrl := []string{fmt.Sprintf("%s:%s", viper.GetString("KAFKA_HOST"), viper.GetString("KAFKA_PORT"))}
 
-// InitProducer initializes the Kafka producer
-func InitProducer(brokerList []string) error {
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-
-	var err error
-	producer, err = sarama.NewSyncProducer(brokerList, config)
+	// Create the Kafka producer
+	producer, err := ConnectProducer(brokersUrl)
 	if err != nil {
-		log.Fatalf("Failed to start Kafka producer: %v", err)
 		return err
 	}
-
-	log.Println("Kafka producer initialized")
-	return nil
-}
-
-// PublishEvent publishes an event to the specified Kafka topic
-func PublishEvent(topic string, message []byte) error {
+	defer producer.Close()
 	msg := &sarama.ProducerMessage{
 		Topic: topic,
-		Value: sarama.ByteEncoder(message),
+		Value: sarama.StringEncoder(message),
 	}
 
-	_, _, err := producer.SendMessage(msg)
+	// Send the message to Kafka
+	partition, offset, err := producer.SendMessage(msg)
 	if err != nil {
-		log.Printf("Failed to send message to Kafka: %v", err)
+		log.Errorf("Error sending message: %v", err)
 		return err
 	}
-
-	log.Printf("Event sent to Kafka topic '%s'", topic)
+	fmt.Printf("Message sent to topic %s, partition %d, offset %d\n", topic, partition, offset)
 	return nil
 }
 
-// CloseProducer gracefully shuts down the Kafka producer
-func CloseProducer() {
-	if err := producer.Close(); err != nil {
-		log.Fatalf("Failed to close Kafka producer: %v", err)
+// Creates and returns a Kafka producer
+func ConnectProducer(brokersUrl []string) (sarama.SyncProducer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Retry.Max = 5
+
+	// Create a new producer instance
+	conn, err := sarama.NewSyncProducer(brokersUrl, config)
+	if err != nil {
+		return nil, err
 	}
-	log.Println("Kafka producer closed")
+	return conn, nil
 }
