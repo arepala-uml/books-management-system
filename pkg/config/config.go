@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/IBM/sarama"
 	"github.com/go-redis/redis/v8"
 	"github.com/labstack/gommon/log"
 	"github.com/nitishm/go-rejson/v4"
@@ -20,14 +19,12 @@ var (
 	ReJSONHandler *rejson.Handler
 	ctx           = context.Background()
 	RedisAddr     string
-	Producer      sarama.SyncProducer
 )
 
 func Connect() {
 	// Initialize Postgres and Redis connection
 	initPostgres()
 	initRedis()
-	initKafka()
 }
 
 func initRedis() {
@@ -75,25 +72,6 @@ func initPostgres() {
 	DB = d
 
 	log.Info("Successfully connected to PostgreSQL (Local)!")
-}
-
-func initKafka() {
-	brokerList := viper.GetStringSlice("KAFKA_BROKERS")
-	if len(brokerList) == 0 {
-		log.Fatal("No Kafka brokers provided in configuration")
-	}
-
-	// Kafka configuration
-	config := sarama.NewConfig()
-	config.Producer.Return.Successes = true
-
-	// Initialize Kafka producer
-	var err error
-	Producer, err = sarama.NewSyncProducer(brokerList, config)
-	if err != nil {
-		log.Errorf("Failed to start Kafka producer: %v", err)
-	}
-	log.Info("Kafka producer initialized successfully")
 }
 
 func GetDB() *gorm.DB {

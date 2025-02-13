@@ -1,0 +1,191 @@
+definitions:
+  controllers.BookListResponse:
+    properties:
+      books:
+        items:
+          $ref: "#/definitions/models.Book"
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+    type: object
+
+  controllers.ErrorResponse:
+    properties:
+      details:
+        items:
+          type: string
+        type: array
+      error:
+        type: string
+    type: object
+
+  controllers.SuccessResponse:
+    properties:
+      book:
+        $ref: "#/definitions/models.Book"
+      message:
+        type: string
+    type: object
+
+  models.Book:
+    properties:
+      author:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      year:
+        type: integer
+    required:
+      - author
+      - title
+      - year
+    type: object
+
+info:
+  title: "Book Management Store" # Change the title here
+  description: "API documentation for managing books in the store"
+  contact: {}
+
+paths:
+  /books:
+    get:
+      description: Fetches all books, with pagination support using limit and offset query parameters
+      parameters:
+        - default: 10
+          description: Limit the number of books per page
+          in: query
+          name: limit
+          type: integer
+        - default: 0
+          description: Offset for pagination
+          in: query
+          name: offset
+          type: integer
+      responses:
+        "200":
+          description: List of books
+          schema:
+            $ref: "#/definitions/controllers.BookListResponse"
+        "400":
+          description: Invalid query parameters
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+        "500":
+          description: Error fetching books
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+      summary: Get all books with optional pagination
+
+    post:
+      consumes:
+        - application/json
+      description: Adds a new book to the system
+      parameters:
+        - description: Book details
+          in: body
+          name: book
+          required: true
+          schema:
+            $ref: "#/definitions/models.Book"
+      produces:
+        - application/json
+      responses:
+        "201":
+          description: Book created successfully
+          schema:
+            $ref: "#/definitions/controllers.SuccessResponse"
+        "400":
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+        "500":
+          description: Error creating book
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+      summary: Create a new book
+
+  /books/{id}:
+    get:
+      description: Fetches the book data for a specific ID, first checking the cache, then the database
+      parameters:
+        - description: Book ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        "200":
+          description: Book details
+          schema:
+            $ref: "#/definitions/models.Book"
+        "404":
+          description: Book not found
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+        "500":
+          description: Error fetching book
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+      summary: Get details of a single book by ID
+
+    put:
+      description: Updates the details of an existing book by ID
+      parameters:
+        - description: Book ID
+          in: path
+          name: id
+          required: true
+          type: integer
+        - description: Updated book details
+          in: body
+          name: book
+          required: true
+          schema:
+            $ref: "#/definitions/models.Book"
+      responses:
+        "200":
+          description: Book updated successfully
+          schema:
+            $ref: "#/definitions/controllers.SuccessResponse"
+        "400":
+          description: Invalid input
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+        "404":
+          description: Book not found
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+        "500":
+          description: Error updating book
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+      summary: Update an existing book
+
+    delete:
+      description: Deletes a specific book from the system by its ID
+      parameters:
+        - description: Book ID
+          in: path
+          name: id
+          required: true
+          type: integer
+      responses:
+        "200":
+          description: Book deleted successfully
+          schema:
+            $ref: "#/definitions/controllers.SuccessResponse"
+        "404":
+          description: Book not found
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+        "500":
+          description: Error deleting book
+          schema:
+            $ref: "#/definitions/controllers.ErrorResponse"
+      summary: Delete a book by ID
+
+swagger: "2.0"

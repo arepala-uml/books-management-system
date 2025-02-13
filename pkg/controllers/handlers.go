@@ -18,11 +18,36 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetBooks handles the GET /books request
+type BookListResponse struct {
+	Limit  int           `json:"limit"`
+	Offset int           `json:"offset"`
+	Books  []models.Book `json:"books"`
+}
+
+// ErrorResponse represents the structure of an error response
+type ErrorResponse struct {
+	Error   string   `json:"error"`
+	Details []string `json:"details,omitempty"`
+}
+
+type SuccessResponse struct {
+	Message string      `json:"message"`
+	Book    models.Book `json:"book,omitempty"`
+}
+
+// @Summary Get all books with optional pagination
+// @Description Fetches all books, with pagination support using limit and offset query parameters
+// @Param limit query int false "Limit the number of books per page" default(10)
+// @Param offset query int false "Offset for pagination" default(0)
+// @Success 200 {object} BookListResponse "List of books"
+// @Failure 400 {object} ErrorResponse "Invalid query parameters"
+// @Failure 500 {object} ErrorResponse "Error fetching books"
+// @Router /books [get]
 func GetBooks(c *gin.Context) {
 	var books []models.Book
 	limit := 10
 	offset := 0
+	log.Info("Got the request to fetch all the books")
 
 	if queryLimit := c.DefaultQuery("limit", "10"); queryLimit != "" {
 		if parsedLimit, err := strconv.Atoi(queryLimit); err == nil {
@@ -63,9 +88,17 @@ func GetBooks(c *gin.Context) {
 	})
 }
 
-// GetBook handles the GET /books/{id} request
+// @Summary Get details of a single book by ID
+// @Description Fetches the book data for a specific ID, first checking the cache, then the database
+// @Param id path int true "Book ID"
+// @Success 200 {object} models.Book "Book details"
+// @Failure 404 {object} ErrorResponse "Book not found"
+// @Failure 500 {object} ErrorResponse "Error fetching book"
+// @Router /books/{id} [get]
+
 func GetBook(c *gin.Context) {
 	id := c.Param("id")
+	log.Infof("Got the request to fectch details of book with id: %d", id)
 	var book models.Book
 
 	// Get book from Redis cache
@@ -93,8 +126,18 @@ func GetBook(c *gin.Context) {
 }
 
 // CreateBook handles the POST /books request
+// @Summary Create a new book
+// @Description Adds a new book to the system
+// @Accept json
+// @Produce json
+// @Param book body models.Book true "Book details"
+// @Success 201 {object} SuccessResponse "Book created successfully"
+// @Failure 400 {object} ErrorResponse "Invalid input"
+// @Failure 500 {object} ErrorResponse "Error creating book"
+// @Router /books [post]
 func CreateBook(c *gin.Context) {
 	var book models.Book
+	log.Info("Got the request to create a new book")
 	if err := c.ShouldBindJSON(&book); err != nil {
 		if jsonErr, ok := err.(*json.UnmarshalTypeError); ok {
 			// Handle type mismatch
@@ -138,7 +181,7 @@ func CreateBook(c *gin.Context) {
 	// Publish the event to Kafka (book created)
 	event := fmt.Sprintf("Book created: %s by %s", book.Title, book.Author)
 	if err := kafka.PublishEvent("book_events", []byte(event)); err != nil {
-		log.Printf("Failed to publish event to Kafka: %v", err)
+		log.Errorf("Failed to publish event to Kafka: %v", err)
 	}
 	log.Infof("Successfully published an event to the kafka topic book_events about creating book with id:%d", book.ID)
 
@@ -150,9 +193,19 @@ func CreateBook(c *gin.Context) {
 	})
 }
 
-// UpdateBook handles the PUT /books/{id} request
+// @Summary Update an existing book
+// @Description Updates the details of an existing book by ID
+// @Param id path int true "Book ID"
+// @Param book body models.Book true "Updated book details"
+// @Success 200 {object} SuccessResponse "Book updated successfully"
+// @Failure 400 {object} ErrorResponse "Invalid input"
+// @Failure 404 {object} ErrorResponse "Book not found"
+// @Failure 500 {object} ErrorResponse "Error updating book"
+// @Router /books/{id} [put]
+
 func UpdateBook(c *gin.Context) {
 	id := c.Param("id")
+	log.Infof("Got the request to update book with id: %d", id)
 	var book models.Book
 	if err := c.ShouldBindJSON(&book); err != nil {
 		if jsonErr, ok := err.(*json.UnmarshalTypeError); ok {
@@ -217,9 +270,16 @@ func UpdateBook(c *gin.Context) {
 	})
 }
 
-// DeleteBook handles the DELETE /books/{id} request
+// @Summary Delete a book by ID
+// @Description Deletes a specific book from the system by its ID
+// @Param id path int true "Book ID"
+// @Success 200 {object} SuccessResponse "Book deleted successfully"
+// @Failure 404 {object} ErrorResponse "Book not found"
+// @Failure 500 {object} ErrorResponse "Error deleting book"
+// @Router /books/{id} [delete]
 func DeleteBook(c *gin.Context) {
 	id := c.Param("id")
+	log.Infof("Got the request to delete book with id: %d", id)
 
 	// Delete from Postgres
 	var existingBook models.Book

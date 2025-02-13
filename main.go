@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
+	_ "github.com/arepala-uml/books-management-system/docs"
+
 	"github.com/arepala-uml/books-management-system/pkg/config"
 	"github.com/arepala-uml/books-management-system/pkg/kafka"
 	"github.com/arepala-uml/books-management-system/pkg/models"
@@ -51,13 +53,6 @@ func init() {
 	// Auto-migrate the Book model to keep the database schema updated
 	models.DB.AutoMigrate(&models.Book{})
 }
-
-// @title 	Tag Service API
-// @version	1.0
-// @description A Tag service API in Go using Gin framework
-
-// @host 	localhost:8888
-// @BasePath /api
 
 func main() {
 	fmt.Println("Hi")
