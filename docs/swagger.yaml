@@ -46,7 +46,7 @@ definitions:
     type: object
 
 info:
-  title: "Book Management Store" # Change the title here
+  title: "Books Management System" # Change the title here
   description: "API documentation for managing books in the store"
   contact: {}
 

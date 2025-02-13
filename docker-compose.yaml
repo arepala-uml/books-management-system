@@ -7,7 +7,10 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 22181:2181
-  
+    networks:
+      - app_network
+
+
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
@@ -21,6 +24,9 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - app_network
+
 
   redis:
     image: redislabs/rejson:latest
@@ -40,15 +46,12 @@ services:
       POSTGRES_PASSWORD: mypassword
       POSTGRES_DB: mydatabase
     ports:
-      - "5432:5432"  # Expose Postgres port
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app_network
-
 networks:
-  kafka_network:
-    driver: bridge
   app_network:
     driver: bridge
 

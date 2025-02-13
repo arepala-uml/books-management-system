@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Book Management Store",
+        "title": "Books Management System",
         "description": "API documentation for managing books in the store",
         "contact": {}
     },

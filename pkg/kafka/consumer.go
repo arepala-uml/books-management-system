@@ -12,6 +12,7 @@ type EventHandler struct{}
 // Initializes a consumer and starts listening for events
 func StartConsumer(brokerList []string, topic string) error {
 	// Create a new consumer group
+	log.Info(brokerList)
 	consumer, err := sarama.NewConsumerGroup(brokerList, "book-events-group", nil)
 	if err != nil {
 		log.Errorf("Failed to start Kafka consumer: %v", err)
