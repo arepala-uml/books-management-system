@@ -61,11 +61,13 @@ func main() {
 	go func() {
 		brokerList := []string{fmt.Sprintf("%s:%s", viper.GetString("KAFKA_HOST"), viper.GetString("KAFKA_PORT"))}
 		topic := viper.GetString("KAFKA_TOPIC")
+		log.Infof("Broker list : %v", brokerList)
 		err := kafka.StartConsumer(brokerList, topic)
 		if err != nil {
 			log.Errorf("Error in consumer: %v", err)
+		} else {
+			log.Info("Kafka consumer started")
 		}
-		log.Info("Kafka consumer started")
 	}()
 
 	// Register the routes for the Book Store API

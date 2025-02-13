@@ -11,6 +11,7 @@ import (
 // Every POST, PUT, DELETE request should publish an event to a Kafka topic
 func PublishEvent(topic string, message []byte) error {
 	brokersUrl := []string{fmt.Sprintf("%s:%s", viper.GetString("KAFKA_HOST"), viper.GetString("KAFKA_PORT"))}
+	log.Infof("Brokers URL: %s", brokersUrl)
 
 	// Create the Kafka producer
 	producer, err := ConnectProducer(brokersUrl)

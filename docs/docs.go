@@ -8,7 +8,7 @@ const docTemplate = `{
     "swagger": "2.0",
     "info": {
         "description": "API documentation for managing books in the store",
-        "title": "Book Management Store",
+        "title": "Books Management System",
         "contact": {},
         "version": "{{.Version}}"
     },
