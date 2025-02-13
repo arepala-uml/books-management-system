@@ -2,6 +2,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/arepala-uml/books-management-system/pkg/config"
@@ -18,43 +19,64 @@ var ctx = context.Background()
 func GetBookFromCache(id string) (*models.Book, error) {
 	// Construct the Redis key in the format "BOOKS_ID:<ID_NUMBER>"
 	redisKey := fmt.Sprintf("BOOKS_ID:%s", id)
-
 	bookData, err := utils.ReJSONGet(redisKey, ".")
 	if err != nil {
 		log.Errorf("Error getting book from Redis: %v", err)
 	}
 
-	// If the book is found in cache, deserialize it into a book object
-	book := bookData.(models.Book)
+	var book models.Book
+	if dataMap, ok := bookData.(map[string]interface{}); ok {
+
+		bookBytes, err := json.Marshal(dataMap)
+		if err != nil {
+			log.Printf("Error marshaling book data to JSON: %v", err)
+			return nil, err
+		}
+
+		err = json.Unmarshal(bookBytes, &book)
+		if err != nil {
+			log.Printf("Error unmarshaling book data: %v", err)
+			return nil, err
+		}
+	} else {
+		log.Error("Retrieved data is not a valid book format")
+		return nil, err
+	}
 	return &book, nil
 }
 
 func GetBooksFromCache() ([]models.Book, error) {
 	books := make([]models.Book, 0)
 
-	// Use Redis to scan all keys matching the pattern "BOOKS_ID:*"
 	iter := config.RedisClient.Scan(ctx, 0, "BOOKS_ID:*", 0).Iterator()
 	for iter.Next(ctx) {
-		// Construct the Redis key in the format "BOOKS_ID:<ID_NUMBER>"
 		redisKey := iter.Val()
-
-		// Get the book data from Redis using JSON.GET (RedisJSON)
 		bookData, err := utils.ReJSONGet(redisKey, ".")
 		if err == redis.Nil {
-			// If the key does not exist in Redis, continue to the next iteration
 			continue
 		} else if err != nil {
-			log.Printf("Error fetching book data from Redis for key %s: %v", redisKey, err)
+			log.Errorf("Error fetching book data from Redis for key %s: %v", redisKey, err)
 			continue
 		}
 
-		book := bookData.(models.Book)
-
-		// Append the book to the books slice
-		books = append(books, book)
+		if dataMap, ok := bookData.(map[string]interface{}); ok {
+			bookBytes, err := json.Marshal(dataMap)
+			if err != nil {
+				log.Errorf("Error marshaling book data to JSON: %v", err)
+				continue
+			}
+			var book models.Book
+			err = json.Unmarshal(bookBytes, &book)
+			if err != nil {
+				log.Errorf("Error unmarshaling book data: %v", err)
+				continue
+			}
+			books = append(books, book)
+		} else {
+			log.Printf("Retrieved data for key %s is not a valid book format", redisKey)
+		}
 	}
 
-	// Check for errors during the iteration
 	if err := iter.Err(); err != nil {
 		log.Printf("Error iterating over Redis keys: %v", err)
 		return nil, err
@@ -63,16 +85,7 @@ func GetBooksFromCache() ([]models.Book, error) {
 	return books, nil
 }
 
-// storeBookInCache stores a book object in Redis cache by its ID
 func StoreBookInCache(book models.Book) error {
-	// Serialize the book object to JSON before storing it in Redis
-	// bookData, err := json.Marshal(book)
-	// if err != nil {
-	// 	log.Printf("Error marshaling book to JSON: %v", err)
-	// 	return err
-	// }
-
-	// Set the book in Redis cache as JSON using RedisJSON (JSON.SET)
 	redisKey := fmt.Sprintf("BOOKS_ID:%d", book.ID)
 	err := utils.ReJSONSet(redisKey, ".", book, viper.GetInt("REDIS_EXPIRY_BOOKS"))
 	if err != nil {
@@ -83,10 +96,8 @@ func StoreBookInCache(book models.Book) error {
 	return nil
 }
 
-// StoreBooksInCache stores multiple books in Redis cache
 func StoreBooksInCache(books []models.Book) error {
 	for _, book := range books {
-		// Cache each book individually using StoreBookInCache
 		err := StoreBookInCache(book)
 		if err != nil {
 			log.Printf("Error storing book %d in cache: %v", book.ID, err)
@@ -97,7 +108,6 @@ func StoreBooksInCache(books []models.Book) error {
 	return nil
 }
 
-// DeleteBookFromCache removes a book from the Redis cache by its ID
 func DeleteBookFromCache(id string) error {
 	redisKey := fmt.Sprintf("BOOKS_ID:%s", id)
 	if utils.RedisKeyExists(redisKey) {

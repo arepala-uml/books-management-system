@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// RegisterBookStoreRoutes registers the API routes for the book store using Gin
+// RegisterBookStoreRoutes registers the API routes for the book management store
 func RegisterBookStoreRoutes(r *gin.Engine) {
 	r.GET("/books", controllers.GetBooks)
 	r.GET("/books/:id", controllers.GetBook)

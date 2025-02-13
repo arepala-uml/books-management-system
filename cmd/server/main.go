@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/arepala-uml/books-management-system/pkg/config"
+	"github.com/arepala-uml/books-management-system/pkg/kafka"
 	"github.com/arepala-uml/books-management-system/pkg/models"
 	"github.com/arepala-uml/books-management-system/pkg/routes"
 	"github.com/gin-gonic/gin"
@@ -47,19 +48,19 @@ func init() {
 	models.DB = config.GetDB()
 	// Auto-migrate the Book model to keep the database schema updated
 	models.DB.AutoMigrate(&models.Book{})
+
 }
 
 func main() {
 	fmt.Println("Hi")
 	r := gin.Default()
+	defer kafka.CloseProducer()
 
 	// Register the routes for the Book Store API
 	routes.RegisterBookStoreRoutes(r)
 
-	// Set up the server hostname and port using values from configuration
 	hostname := viper.GetString("SERVER_HOST") + ":" + viper.GetString("SERVER_PORT")
 	log.Info("Server running on ", hostname)
 
-	// Start the server and listen on the configured hostname and port
 	log.Fatal(http.ListenAndServe(hostname, r))
 }
