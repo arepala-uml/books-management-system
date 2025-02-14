@@ -27,7 +27,7 @@ Before you begin, make sure you have the following software installed on your sy
 Clone the repository to your local machine:
 
   ```
-  git https://github.com/arepala-uml/books-management-system.git
+  git clone https://github.com/arepala-uml/books-management-system.git
   ```
 Move to the project directory:
   ```
