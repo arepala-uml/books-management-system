@@ -7,7 +7,9 @@ This project is a Go-based backend application that manages book-related operati
 
 - [Prerequisites](#prerequisites)
 - [Go Binary Building](#go-binary-building)
-- [Install Kafka, Redis, PostgreSQL](#installation-kafka-redis-postgresql)
+- [Install Kafka, Redis, PostgreSQL](#install-kafka-redis-postgresql)
+- [Run the Go Binary](#run-the-go-binary)
+- [Access the server](#access-the-server)
 
 ## Prerequisites
 
@@ -45,6 +47,7 @@ Move to the project directory:
     ```
     GOOS=windows GOARCH=amd64 go build -o book-management-store main.go
     ```
+  This will create the binary file `book-management-store` in the current directory.
       
 
 ## Setting Up Kafka, Redis, and PostgreSQL Services
@@ -90,7 +93,67 @@ Move to the project directory:
   ```
   This will stop all running services and remove their containers.
 
-## Installation Using Docker (optional)
+## Run the Go Binary in the Background
+#### Step 1: Navigate to the Project Directory
+  First, navigate to the books-management-system directory:
+  ```
+  cd books-management-system/
+  ```
+
+#### Step 2: Run the Binary in the Background Using `nohup`
+  Now, use the nohup command to run the Go application in the background:
+  ```
+  nohup ./book-management-store > nohup.out 2>&1 &
+  ```
+  `nohup` ensures that the process will continue running in the background.
+
+#### Step 3: Verify the Process is Running
+  To verify if your Go application is running, use the following command:
+  ```
+  ps aux | grep book-management-store
+  ```
+
+#### Step 4: Check the `nohup.out` and `app.log`
+  After running the above command, the output will be saved to nohup.out by default. 
+  To verify the output, check the contents of the nohup.out file:
+  ```
+  cat nohup.out
+  ```
+#### Step 5: Monitor the Logs
+  You can monitor the logs by checking the contents of the `nohup.out` or `app.log` files:
+  ```
+  tail -f nohup.out
+  ```
+  This command will display the latest logs in real time.
+  Or if you want to monitor `app.log`:
+  ```
+  tail -f app.log
+  ```
+
+## Access the server and swagger.
+
+#### Step 1: Access the Machine via IP Address
+  To access your machine, you need to use the IP address or the public DNS of your server. 
+  If you're running on an AWS EC2 instance, you can find the public IP address or public DNS 
+  from the AWS Management Console under "Instances."
+
+  Once you have the IP address, you can access the server like this:
+  ```
+  http://<your-server-ip>:<SERVER_PORT>/books/
+  ```
+  Replace `<your-server-ip>` with the public IP or DNS of your server.
+
+  Replace `<SERVER_PORT>` with the port your Go application is running on port (9010)
 
 
+#### Step 2: Swagger URL Access
+  After navigating to the correct Swagger URL (/swagger), you should be able to see the Swagger UI and interact with the API documentation.
+  ```
+  http://<your-server-ip>:<SERVER_PORT>/swagger/
+  ```
+  This will allow you to view and test your API endpoints from the Swagger UI interface.
+
+  Replace `<your-server-ip>` with the public IP or DNS of your server.
+
+  Replace `<SERVER_PORT>` with the port your Go application is running on port (9010)
 
