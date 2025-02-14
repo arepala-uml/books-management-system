@@ -7,9 +7,9 @@ This project is a Go-based backend application that manages book-related operati
 
 - [Prerequisites](#prerequisites)
 - [Go Binary Building](#go-binary-building)
-- [Install Kafka, Redis, PostgreSQL](#install-kafka-redis-postgresql)
+- [Install Kafka Redis Postgres](#install-kafka-redis-postgres)
 - [Run the Go Binary](#run-the-go-binary)
-- [Access the server](#access-the-server)
+- [Access the server and swagger](#access-the-server-and-swagger)
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ Move to the project directory:
   This will create the binary file `book-management-store` in the current directory.
       
 
-## Setting Up Kafka, Redis, and PostgreSQL Services
+## Install Kafka Redis Postgres
 
 #### Step 1: Navigate to Frontend Folder
   Navigate to the project directory
@@ -93,7 +93,7 @@ Move to the project directory:
   ```
   This will stop all running services and remove their containers.
 
-## Run the Go Binary in the Background
+## Run the Go Binary
 #### Step 1: Navigate to the Project Directory
   First, navigate to the books-management-system directory:
   ```
