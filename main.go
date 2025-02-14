@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -48,6 +49,15 @@ func InitConfig() {
 
 func init() {
 	InitConfig()
+	log.Info("creating logger for agent")
+	LogLocation := viper.GetString("LOG_FILE_PATH")
+	log.Infof("%s file is being used for logging ", LogLocation)
+	f, err := os.OpenFile(LogLocation, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalf("error opening file: %v", err)
+	}
+	wrt := io.MultiWriter(os.Stdout, f)
+	log.SetOutput(wrt)
 	config.Connect()
 	models.DB = config.GetDB()
 	// Auto-migrate the Book model to keep the database schema updated
